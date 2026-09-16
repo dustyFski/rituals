@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# cmux-report — best-effort cmux sidebar reporting for skills/loops.
+#
+# Safe to call from ANY skill, in ANY context. It is a silent NO-OP and exits 0
+# whenever it is not running inside a cmux terminal (no $CMUX_WORKSPACE_ID, or
+# the `cmux` binary is missing), so wiring it into a skill can never break that
+# skill when it's run in a plain terminal, on a remote host, or inside a subagent
+# that has no cmux surface. It also swallows every cmux error. Every cmux call is
+# capped at 3 seconds, so a hung socket cannot stall the caller. Never prints,
+# always exits 0.
+#
+# Usage:
+#   cmux-report progress <0.0-1.0> [label]   # set/move the workspace progress bar
+#   cmux-report clear                         # remove the progress bar
+#   cmux-report status <key> <value>          # set a sidebar status pill
+#   cmux-report notify <title> [body]         # desktop/sidebar notification
+set +e
+
+# Gate 1: must be inside a cmux terminal.
+[ -n "$CMUX_WORKSPACE_ID" ] || exit 0
+
+# Gate 2: must be able to find the cmux binary.
+CMUX="$(command -v cmux 2>/dev/null)"
+if [ -z "$CMUX" ] && [ -x /Applications/cmux.app/Contents/Resources/bin/cmux ]; then
+  CMUX=/Applications/cmux.app/Contents/Resources/bin/cmux
+fi
+[ -n "$CMUX" ] || exit 0
+
+# Bounded call: macOS ships no coreutils `timeout`, so cap each call with python3,
+# which this repo already requires. A hung cmux socket costs 3 seconds, not the
+# rest of the task.
+cx() {
+  python3 -c 'import subprocess,sys; sys.exit(subprocess.run(sys.argv[1:], timeout=3).returncode)' \
+    "$CMUX" "$@" >/dev/null 2>&1
+}
+
+sub="$1"; shift 2>/dev/null
+
+case "$sub" in
+  progress)
+    ratio="$1"; label="$2"
+    [ -n "$ratio" ] || exit 0
+    if [ -n "$label" ]; then
+      cx set-progress "$ratio" --label "$label"
+    else
+      cx set-progress "$ratio"
+    fi
+    ;;
+  clear)
+    cx clear-progress
+    ;;
+  status)
+    key="$1"; val="$2"
+    [ -n "$key" ] || exit 0
+    cx set-status "$key" "$val"
+    ;;
+  notify)
+    title="$1"; body="$2"
+    [ -n "$title" ] || exit 0
+    if [ -n "$body" ]; then
+      cx notify --title "$title" --body "$body"
+    else
+      cx notify --title "$title"
+    fi
+    ;;
+  *)
+    : # unknown subcommand -> no-op
+    ;;
+esac
+
+exit 0

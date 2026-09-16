@@ -1,0 +1,28 @@
+{
+  "name": "desk",
+  "version": "0.1.0",
+  "description": "Desk-side helpers: cmux terminal control, screenshot vision, and local Ollama inference routing.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/skills/cmux/hooks/cmux-progress.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/skills/cmux/hooks/cmux-progress.py"
+          }
+        ]
+      }
+    ]
+  }
+}

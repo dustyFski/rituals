@@ -1,0 +1,11 @@
+{
+  "name": "rituals",
+  "owner": { "name": "dustyFski" },
+  "plugins": [
+    { "name": "loops",   "source": "./plugins/loops",   "description": "hard, cascade: execute-and-verify loops with a cross-model refute gate" },
+    { "name": "session", "source": "./plugins/session", "description": "wrap, handoff: session close ritual and mid-task handoff" },
+    { "name": "ops",     "source": "./plugins/ops",     "description": "watchdog, repeat-offender, shadow, killcheck: operating discipline" },
+    { "name": "ship",    "source": "./plugins/ship",    "description": "build-loop, launch-gate, seo-content, proof-toolkit: from plan to launch" },
+    { "name": "desk",    "source": "./plugins/desk",    "description": "cmux, ss, local-infer: desk utilities" }
+  ]
+}
